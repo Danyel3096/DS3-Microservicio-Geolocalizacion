@@ -4,6 +4,7 @@ package com.ds3.team8.geolocation_service.services;
 import com.ds3.team8.geolocation_service.dtos.LocationRequest;
 import com.ds3.team8.geolocation_service.dtos.LocationResponse;
 import com.ds3.team8.geolocation_service.entities.Location;
+import com.ds3.team8.geolocation_service.exceptions.LocationNotFoundException;
 import com.ds3.team8.geolocation_service.repositories.ILocationRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -37,28 +38,30 @@ public class LocationServiceImpl implements ILocationService {
     @Transactional
     @Override
     public void delete(Long id) {
-        Location existing = locationRepository.findById(id)
+        Location existingLocation = locationRepository.findById(id)
                 .orElseThrow(() -> new LocationNotFoundException(id));
 
-        locationRepository.delete(existing);
+        locationRepository.delete(existingLocation);
     }
 
+    // Actualiza una ubicación existente
     @Transactional
     @Override
     public LocationResponse update(Long id, LocationRequest request) {
-        Location existing = locationRepository.findById(id)
+        Location existingLocation = locationRepository.findById(id)
                 .orElseThrow(() -> new LocationNotFoundException(id));
 
-        existing.setLatitud(request.getLatitud());
-        existing.setLongitud(request.getLongitud());
-        existing.setTimestamp(request.getTimestamp());
-        existing.setIdPedido(request.getIdPedido());
+        existingLocation.setLatitud(request.getLatitud());
+        existingLocation.setLongitud(request.getLongitud());
+        existingLocation.setTimestamp(request.getTimestamp());
+        existingLocation.setIdPedido(request.getIdPedido());
 
-        Location updated = locationRepository.save(existing);
-        return convertToResponse(updated);
+        Location updatedLocation = locationRepository.save(existingLocation);
+        return convertToResponse(updatedLocation);
     }
 
-    @Transactional
+    // Busca una ubicación por su ID
+    @Transactional(readOnly = true)
     @Override
     public LocationResponse findById(Long id) {
         Location location = locationRepository.findById(id)
@@ -67,7 +70,8 @@ public class LocationServiceImpl implements ILocationService {
         return convertToResponse(location);
     }
 
-    @Transactional
+    // Lista todas las ubicaciones
+    @Transactional(readOnly = true)
     @Override
     public List<LocationResponse> findAll() {
         return locationRepository.findAll()
